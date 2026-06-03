@@ -120,7 +120,7 @@ class VideoMaterial:
         self.material_id = uuid.uuid4().hex
         self.path = path
         self.crop_settings = crop_settings
-        self.local_material_id = ""
+        self.local_material_id = self.material_id
 
         if not pymediainfo.MediaInfo.can_parse():
             raise ValueError(f"不支持的视频素材类型 '{postfix}'")
@@ -162,19 +162,47 @@ class VideoMaterial:
             "audio_fade": None,
             "category_id": "",
             "category_name": "local",
-            "check_flag": 63487,
+            "check_flag": 7,
             "crop": self.crop_settings.export_json(),
             "crop_ratio": "free",
             "crop_scale": 1.0,
             "duration": self.duration,
+            "extra_type_option": 0,
+            "formula_id": "",
+            "freeze": None,
+            "has_audio": self.material_type == "video",
             "height": self.height,
             "id": self.material_id,
+            "intensifies_audio_path": "",
+            "intensifies_path": "",
+            "is_ai_generate_content": False,
+            "is_copyright": False,
+            "is_text_edit_overdub": False,
+            "is_unified_beauty_mode": False,
+            "local_id": "",
             "local_material_id": self.local_material_id,
             "material_id": self.material_id,
             "material_name": self.material_name,
-            "media_path": "",
+            "material_url": "",
+            "media_path": self.path,
+            "object_locked": None,
+            "origin_material_id": "",
             "path": self.path,
+            "request_id": "",
+            "reverse_path": "",
+            "source_platform": 0,
+            "stable": {"matrix_path": "", "stable_level": 0, "time_range": {"duration": 0, "start": 0}},
+            "team_id": "",
             "type": self.material_type,
+            "video_algorithm": {
+                "algorithms": [],
+                "deflicker": None,
+                "motion_blur_config": None,
+                "noise_reduction": None,
+                "path": "",
+                "quality_enhance": None,
+                "time_range": None
+            },
             "width": self.width
         }
         return video_material_json
@@ -231,7 +259,7 @@ class AudioMaterial:
             "app_id": 0,
             "category_id": "",
             "category_name": "local",
-            "check_flag": 3,
+            "check_flag": 1,
             "copyright_limit_type": "none",
             "duration": self.duration,
             "effect_id": "",
@@ -241,7 +269,19 @@ class AudioMaterial:
             "music_id": self.material_id,
             "name": self.material_name,
             "path": self.path,
+            "request_id": "",
             "source_platform": 0,
+            "team_id": "",
+            "text_id": "",
+            "tone_category_id": "",
+            "tone_category_name": "",
+            "tone_effect_id": "",
+            "tone_effect_name": "",
+            "tone_platform": "",
+            "tone_second_category_id": "",
+            "tone_second_category_name": "",
+            "tone_speaker": "",
+            "tone_type": "",
             "type": "extract_music",
             "wave_points": []
         }

@@ -31,7 +31,6 @@
         "video_mute": false,
         "zoom_info_params": null
     },
-    "cover": null,
     "create_time": 0,
     "duration": 0,
     "extra_info": null,
@@ -53,13 +52,13 @@
     "last_modified_platform": {
         "app_id": 3704,
         "app_source": "lv",
-        "app_version": "5.9.0",
+        "app_version": "10.7.0",
         "os": "windows"
     },
     "platform": {
         "app_id": 3704,
         "app_source": "lv",
-        "app_version": "5.9.0",
+        "app_version": "10.7.0",
         "os": "windows"
     },
     "materials": {

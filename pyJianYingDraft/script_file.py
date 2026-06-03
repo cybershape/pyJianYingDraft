@@ -12,7 +12,7 @@ from . import exceptions
 from .template_mode import ImportedTrack, EditableTrack, ImportedMediaTrack, ImportedTextTrack, ShrinkMode, ExtendMode, import_track
 from .time_util import Timerange, tim, srt_tstamp
 from .local_materials import VideoMaterial, AudioMaterial
-from .segment import BaseSegment, Speed, ClipSettings
+from .segment import BaseSegment, Speed, ClipSettings, PlaceholderInfo, SoundChannelMapping, VocalSeparation, MaterialColor
 from .audio_segment import AudioSegment, AudioFade, AudioEffect
 from .video_segment import VideoSegment, StickerSegment, SegmentAnimations, VideoEffect, Transition, Filter, BackgroundFilling, MixMode
 from .effect_segment import EffectSegment, FilterSegment
@@ -55,6 +55,11 @@ class ScriptMaterial:
     canvases: List[BackgroundFilling]
     """背景填充列表"""
 
+    placeholder_infos: List[PlaceholderInfo]
+    sound_channel_mappings: List[SoundChannelMapping]
+    vocal_separations: List[VocalSeparation]
+    material_colors: List[MaterialColor]
+
     def __init__(self):
         self.audios = []
         self.videos = []
@@ -72,6 +77,11 @@ class ScriptMaterial:
         self.filters = []
         self.mix_modes = []
         self.canvases = []
+
+        self.placeholder_infos = []
+        self.sound_channel_mappings = []
+        self.vocal_separations = []
+        self.material_colors = []
 
     @overload
     def __contains__(self, item: Union[VideoMaterial, AudioMaterial]) -> bool: ...
@@ -127,16 +137,17 @@ class ScriptMaterial:
             "manual_deformations": [],
             "masks": self.masks,
             "material_animations": [ani.export_json() for ani in self.animations],
-            "material_colors": [],
+            "material_colors": [mc.export_json() for mc in self.material_colors],
             "multi_language_refs": [],
             "placeholders": [],
+            "placeholder_infos": [pi.export_json() for pi in self.placeholder_infos],
             "plugin_effects": [],
             "primary_color_wheels": [],
             "realtime_denoises": [],
             "shapes": [],
             "smart_crops": [],
             "smart_relights": [],
-            "sound_channel_mappings": [],
+            "sound_channel_mappings": [scm.export_json() for scm in self.sound_channel_mappings],
             "speeds": [spd.export_json() for spd in self.speeds],
             "stickers": self.stickers,
             "tail_leaders": [],
@@ -148,7 +159,7 @@ class ScriptMaterial:
             "video_trackings": [],
             "videos": [video.export_json() for video in self.videos],
             "vocal_beautifys": [],
-            "vocal_separations": []
+            "vocal_separations": [vs.export_json() for vs in self.vocal_separations]
         }
 
 class ScriptFile:
@@ -374,10 +385,27 @@ class ScriptFile:
                 self.materials.filters.append(segment.effect)
             # 字体样式
             self.materials.texts.append(segment.export_material())
+            self.materials.speeds.append(segment.speed)
 
         # 添加片段素材
         if isinstance(segment, (VideoSegment, AudioSegment)):
             self.add_material(segment.material_instance)
+
+        # 创建 companion materials (capcut-cli factory.ts 模式)
+        if isinstance(segment, (VideoSegment, StickerSegment, AudioSegment, TextSegment)):
+            placeholder = PlaceholderInfo()
+            scm = SoundChannelMapping()
+            vocal = VocalSeparation()
+
+            self.materials.placeholder_infos.append(placeholder)
+            self.materials.sound_channel_mappings.append(scm)
+            self.materials.vocal_separations.append(vocal)
+            segment.extra_material_refs.extend([placeholder.global_id, scm.global_id, vocal.global_id])
+
+            if isinstance(segment, (VideoSegment, StickerSegment)):
+                mat_color = MaterialColor()
+                self.materials.material_colors.append(mat_color)
+                segment.extra_material_refs.append(mat_color.global_id)
 
         return self
 
@@ -835,3 +863,35 @@ class ScriptFile:
         if self.save_path is None:
             raise ValueError("没有设置保存路径, 可能不在模板模式下")
         self.dump(self.save_path)
+        self._update_draft_meta()
+
+    def _update_draft_meta(self) -> None:
+        """更新同目录下的 draft_meta_info.json, 填充素材 ID 索引和路径"""
+        draft_dir = os.path.dirname(self.save_path)
+        draft_name = os.path.basename(draft_dir)
+        meta_path = os.path.join(draft_dir, "draft_meta_info.json")
+        if not os.path.exists(meta_path):
+            return
+
+        with open(meta_path, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+
+        root_path = os.path.dirname(draft_dir)
+        meta["draft_fold_path"] = draft_dir
+        meta["draft_root_path"] = root_path
+        meta["draft_name"] = draft_name
+
+        video_ids = [v.material_id for v in self.materials.videos]
+        audio_ids = [a.material_id for a in self.materials.audios]
+        text_ids = [t["id"] for t in self.materials.texts]
+        sticker_ids = [s["id"] for s in self.materials.stickers]
+
+        type_map = {0: video_ids, 1: audio_ids, 3: text_ids, 8: sticker_ids}
+
+        for entry in meta.get("draft_materials", []):
+            t = entry.get("type")
+            if t in type_map and type_map[t]:
+                entry["value"] = type_map[t]
+
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(meta, f, ensure_ascii=False, indent="\t")

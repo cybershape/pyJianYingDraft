@@ -392,6 +392,9 @@ class TextSegment(VisualSegment):
         if self.shadow:
             check_flag |= 32
 
+        # UTF-16 LE 字节偏移 (非字符数)
+        text_byte_len = len(self.text.encode("utf-16-le"))
+
         content_json = {
             "styles": [
                 {
@@ -405,7 +408,7 @@ class TextSegment(VisualSegment):
                             }
                         }
                     },
-                    "range": [0, len(self.text)],
+                    "range": [0, text_byte_len],
                     "size": self.style.size,
                     "bold": self.style.bold,
                     "italic": self.style.italic,
@@ -430,16 +433,21 @@ class TextSegment(VisualSegment):
 
         ret = {
             "id": self.material_id,
+            "local_material_id": self.material_id,
             "content": json.dumps(content_json, ensure_ascii=False),
 
             "typesetting": int(self.style.vertical),
             "alignment": self.style.align,
+            "font_size": self.style.size,
+            "text_color": "#FFFFFFFF",
             "letter_spacing": self.style.letter_spacing * 0.05,
             "line_spacing": 0.02 + self.style.line_spacing * 0.05,
 
             "line_feed": 1,
             "line_max_width": self.style.max_line_width,
             "force_apply_line_max_width": False,
+            "fixed_width": -1.0,
+            "fixed_height": -1.0,
 
             "check_flag": check_flag,
 

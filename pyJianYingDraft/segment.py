@@ -124,6 +124,75 @@ class AudioFade:
             "type": "audio_fade"
         }
 
+class PlaceholderInfo:
+    global_id: str
+
+    def __init__(self):
+        self.global_id = uuid.uuid4().hex
+
+    def export_json(self) -> Dict[str, Any]:
+        return {
+            "id": self.global_id,
+            "type": "placeholder_info",
+            "error_path": "",
+            "error_text": "",
+            "meta_type": "none",
+            "res_path": "",
+            "res_text": ""
+        }
+
+class SoundChannelMapping:
+    global_id: str
+
+    def __init__(self):
+        self.global_id = uuid.uuid4().hex
+
+    def export_json(self) -> Dict[str, Any]:
+        return {
+            "id": self.global_id,
+            "type": "none",
+            "audio_channel_mapping": 0,
+            "is_config_open": False
+        }
+
+class VocalSeparation:
+    global_id: str
+
+    def __init__(self):
+        self.global_id = uuid.uuid4().hex
+
+    def export_json(self) -> Dict[str, Any]:
+        return {
+            "id": self.global_id,
+            "type": "vocal_separation",
+            "choice": 0,
+            "enter_from": "",
+            "final_algorithm": "",
+            "production_path": "",
+            "removed_sounds": [],
+            "time_range": None
+        }
+
+class MaterialColor:
+    global_id: str
+
+    def __init__(self):
+        self.global_id = uuid.uuid4().hex
+
+    def export_json(self) -> Dict[str, Any]:
+        return {
+            "id": self.global_id,
+            "type": "material_color",
+            "gradient_angle": 90,
+            "gradient_colors": [],
+            "gradient_percents": [],
+            "height": 0,
+            "is_color_clip": False,
+            "is_gradient": False,
+            "solid_color": "",
+            "width": 0
+        }
+
 class ClipSettings:
     """素材片段的图像调节设置"""
 
