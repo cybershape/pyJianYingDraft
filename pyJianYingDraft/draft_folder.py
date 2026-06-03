@@ -3,7 +3,7 @@
 import os
 import shutil
 
-from typing import List
+from typing import List, Literal
 
 from . import assets
 from .script_file import ScriptFile
@@ -62,7 +62,8 @@ class DraftFolder:
 
     def create_draft(self, draft_name: str, width: int, height: int, fps: int = 30, *,
                      maintrack_adsorb: bool = True,
-                     allow_replace: bool = False) -> ScriptFile:
+                     allow_replace: bool = False,
+                     platform: Literal["windows", "mac"] = "windows") -> ScriptFile:
         """创建一个新草稿并开始编辑, 编辑完成后使用`ScriptFile.save()`保存即可
 
         Args:
@@ -72,6 +73,7 @@ class DraftFolder:
             fps (`int`, optional): 视频帧率. 默认为30.
             maintrack_adsorb (`bool`, optional): 是否启用主轨道吸附（主轨磁吸）. 默认启用.
             allow_replace (`bool`, optional): 是否允许覆盖与`draft_name`重名的草稿. 默认为否.
+            platform (`str`, optional): 目标平台, "windows"或"mac". 默认为"windows".
 
         Raises:
             `FileExistsError`: 已存在与`draft_name`重名的草稿, 但不允许覆盖.
@@ -87,8 +89,9 @@ class DraftFolder:
         shutil.copy(assets.get_asset_path("DRAFT_META_TEMPLATE"), os.path.join(draft_path, "draft_meta_info.json"))
 
         # 创建草稿文件
-        script_file = ScriptFile(width, height, fps, maintrack_adsorb)
-        script_file.save_path = os.path.join(draft_path, "draft_content.json")
+        script_file = ScriptFile(width, height, fps, maintrack_adsorb, platform=platform)
+        content_filename = "draft_info.json" if platform == "mac" else "draft_content.json"
+        script_file.save_path = os.path.join(draft_path, content_filename)
 
         return script_file
 
@@ -124,7 +127,12 @@ class DraftFolder:
         if not os.path.exists(draft_path):
             raise FileNotFoundError(f"草稿文件夹 {draft_name} 不存在")
 
-        return ScriptFile.load_template(os.path.join(draft_path, "draft_content.json"))
+        for filename in ("draft_content.json", "draft_info.json"):
+            json_path = os.path.join(draft_path, filename)
+            if os.path.exists(json_path):
+                return ScriptFile.load_template(json_path)
+        raise FileNotFoundError(
+            f"草稿文件夹 {draft_name} 中未找到 draft_content.json 或 draft_info.json")
 
     def duplicate_as_template(self, template_name: str, new_draft_name: str, allow_replace: bool = False) -> ScriptFile:
         """复制一份给定的草稿, 并在复制出的新草稿上进行编辑

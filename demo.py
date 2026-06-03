@@ -4,13 +4,13 @@ import pyJianYingDraft as draft
 from pyJianYingDraft import IntroType, TransitionType, trange, tim
 
 # 设置草稿文件夹
-draft_folder = draft.DraftFolder(r"<你的草稿文件夹>")
+draft_folder = draft.DraftFolder(r"/Users/hu/Movies/JianyingPro/User Data/Projects/com.lveditor.draft")
 
 tutorial_asset_dir = os.path.join(os.path.dirname(__file__), 'readme_assets', 'tutorial')
 assert os.path.exists(tutorial_asset_dir), f"未找到例程素材文件夹{os.path.abspath(tutorial_asset_dir)}"
 
 # 创建剪映草稿
-script = draft_folder.create_draft("demo", 1920, 1080, allow_replace=True)  # 1920x1080分辨率
+script = draft_folder.create_draft("demo", 1920, 1080, allow_replace=True, platform="mac")  # 1920x1080分辨率
 
 # 添加音频、视频和文本轨道
 script.add_track(draft.TrackType.audio).add_track(draft.TrackType.video).add_track(draft.TrackType.text)

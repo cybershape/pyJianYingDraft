@@ -181,7 +181,11 @@ class ScriptFile:
     imported_tracks: List[ImportedTrack]
     """导入的轨道信息"""
 
-    def __init__(self, width: int, height: int, fps: int, maintrack_adsorb: bool):
+    platform: Literal["windows", "mac"]
+    """目标平台, "windows"或"mac" """
+
+    def __init__(self, width: int, height: int, fps: int, maintrack_adsorb: bool,
+                 platform: Literal["windows", "mac"] = "windows"):
         """**创建剪映草稿推荐使用`DraftFolder.create_draft()`而非此方法**
 
         Args:
@@ -189,6 +193,7 @@ class ScriptFile:
             height (int): 视频高度, 单位为像素
             fps (int): 视频帧率
             maintrack_adsorb (bool): 是否启用主轨道吸附（主轨磁吸）
+            platform (str): 目标平台, "windows"或"mac". 默认为"windows".
         """
         self.save_path = None
 
@@ -197,6 +202,7 @@ class ScriptFile:
         self.fps = fps
         self.duration = 0
         self.maintrack_adsorb = maintrack_adsorb
+        self.platform = platform
 
         self.materials = ScriptMaterial()
         self.tracks = {}
@@ -206,6 +212,9 @@ class ScriptFile:
 
         with open(assets.get_asset_path('DRAFT_CONTENT_TEMPLATE'), "r", encoding="utf-8") as f:
             self.content = json.load(f)
+
+        self.content["platform"]["os"] = platform
+        self.content["last_modified_platform"]["os"] = platform
 
     @staticmethod
     def load_template(json_path: str) -> "ScriptFile":
@@ -794,6 +803,8 @@ class ScriptFile:
         self.content["duration"] = self.duration
         self.content["config"]["maintrack_adsorb"] = self.maintrack_adsorb
         self.content["canvas_config"] = {"width": self.width, "height": self.height, "ratio": "original"}
+        self.content["platform"]["os"] = self.platform
+        self.content["last_modified_platform"]["os"] = self.platform
         self.content["materials"] = self.materials.export_json()
 
         # 合并导入的素材
